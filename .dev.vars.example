@@ -1,0 +1,2 @@
+# Salin menjadi .dev.vars; gunakan token acak pribadi minimal 32 karakter.
+DEVICE_TOKEN="ganti-dengan-token-acak-pribadi-minimal-32-karakter"

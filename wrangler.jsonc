@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "smartplant",
+  "main": "worker/index.ts",
+  "workers_dev": true,
+  "routes": [{ "pattern": "smartplant.web.id", "custom_domain": true }],
+  // Versi runtime lokal yang tersedia mendukung tanggal ini.
+  "compatibility_date": "2026-10-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "smartplant",
+    "database_id": "e3fa6339-2aae-4e30-9f78-875894234f19",
+    "migrations_dir": "migrations"
+  }],
+  "observability": { "enabled": true },
+  "upload_source_maps": true
+}

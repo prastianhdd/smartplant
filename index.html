@@ -3,15 +3,83 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#245c3a" />
-    <meta name="description" content="Smart Plant — monitoring tanaman dan penyiraman otomatis berbasis ESP32. Riwayat sensor dalam waktu Indonesia Barat." />
+    <meta name="theme-color" content="#06402e" />
+    <title>Smart Plant — Monitoring Tanaman &amp; Penyiraman ESP32</title>
+    <meta name="description" content="Smart Plant adalah proyek IoT mahasiswa berbasis ESP32 untuk monitoring kondisi tanah, suhu, kelembapan udara, penyiraman otomatis, dan riwayat data tanaman." />
+    <link rel="canonical" href="https://smartplant.web.id/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="Smart Plant" />
+    <meta property="og:title" content="Smart Plant — Monitoring Tanaman &amp; Penyiraman ESP32" />
+    <meta property="og:description" content="Proyek IoT mahasiswa: pantau kondisi tanah, suhu, kelembapan udara, status pompa, serta riwayat data tanaman melalui website." />
+    <meta property="og:url" content="https://smartplant.web.id/" />
+    <meta property="og:image" content="https://smartplant.web.id/icon-512.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Ikon tunas hijau Smart Plant" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Smart Plant — Monitoring Tanaman &amp; Penyiraman ESP32" />
+    <meta name="twitter:description" content="Pantau kondisi tanaman dan riwayat penyiraman otomatis berbasis ESP32. Proyek IoT mahasiswa dengan website responsif dan dukungan PWA." />
+    <meta name="twitter:image" content="https://smartplant.web.id/icon-512.png" />
+    <meta name="twitter:image:alt" content="Ikon tunas hijau Smart Plant" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <title>Smart Plant — Monitoring ESP32</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://smartplant.web.id/#website",
+            "url": "https://smartplant.web.id/",
+            "name": "Smart Plant",
+            "inLanguage": "id"
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://smartplant.web.id/#webpage",
+            "url": "https://smartplant.web.id/",
+            "name": "Smart Plant — Monitoring Tanaman & Penyiraman ESP32",
+            "description": "Proyek IoT mahasiswa untuk monitoring tanaman dan penyiraman otomatis berbasis ESP32, dilengkapi grafik, riwayat data, dan ekspor CSV.",
+            "inLanguage": "id",
+            "isPartOf": { "@id": "https://smartplant.web.id/#website" },
+            "about": { "@id": "https://smartplant.web.id/#application" }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://smartplant.web.id/#application",
+            "name": "Smart Plant",
+            "url": "https://smartplant.web.id/",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "id",
+            "description": "Website monitoring kondisi tanah, suhu, kelembapan udara, serta status dan riwayat penyiraman otomatis ESP32.",
+            "featureList": ["Monitoring sensor tanaman", "Grafik dan riwayat data dalam WIB", "Ekspor CSV", "Mode demo", "Dukungan PWA"]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main>
+        <h1>Smart Plant — Monitoring Tanaman Berbasis ESP32</h1>
+        <p>Proyek IoT mahasiswa untuk memantau kondisi tanah, suhu, kelembapan udara, dan penyiraman otomatis melalui website.</p>
+        <h2>Pemantauan dan riwayat tanaman</h2>
+        <ul>
+          <li>Pembacaan sensor terbaru dan status pompa air.</li>
+          <li>Grafik, tabel riwayat berdasarkan tanggal, dan unduhan CSV untuk laporan.</li>
+          <li>Waktu dalam WIB, tampilan responsif, dan dukungan PWA.</li>
+          <li>Mode demo dengan data simulasi yang terpisah dari data perangkat.</li>
+        </ul>
+        <p>ESP32 mengendalikan penyiraman secara mandiri. Website hanya digunakan untuk monitoring, bukan mengendalikan pompa.</p>
+        <noscript><p>Aktifkan JavaScript untuk membuka dashboard, melihat pembacaan sensor, dan mencoba mode demo.</p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

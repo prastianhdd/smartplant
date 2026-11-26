@@ -2,7 +2,6 @@ import './style.css';
 import foliageUrl from './assets/foliage.svg?no-inline';
 import { soilState, wibDate } from '../shared/types';
 import type { HistoryResponse, LatestResponse } from '../shared/types';
-import { demoHistory } from './demo';
 
 type Page = 'overview' | 'history' | 'about';
 type Metric = 'soil_adc' | 'temperature' | 'humidity';
@@ -15,7 +14,6 @@ const number = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
 let page: Page = 'overview';
 let date = wibDate();
 let followToday = true;
-let demo = false;
 let latest: LatestResponse = { reading: null, online: false };
 let history: HistoryResponse = { readings: [], events: [] };
 let metric: Metric = 'soil_adc';
@@ -72,7 +70,6 @@ function shell() {
     if (button.matches('a.brand')) { event.preventDefault(); page = 'overview'; render(); }
     if (button.dataset.page) { page = button.dataset.page as Page; tablePage = 0; render(); window.scrollTo(0, 0); }
     if (button.dataset.metric) { metric = button.dataset.metric as Metric; render(); }
-    if (button.id === 'demo-toggle') { demo = !demo; latest = { reading: null, online: false }; history = { readings: [], events: [] }; cached = false; tablePage = 0; error = ''; await load(); }
     if (button.id === 'refresh') await load();
     if (button.id === 'today') { date = wibDate(); followToday = true; tablePage = 0; await load(); }
     if (button.id === 'export') exportCsv();
@@ -102,11 +99,6 @@ async function load() {
   requestController = new AbortController();
   if (followToday) date = wibDate();
   if (loadedDate !== date) { history = { readings: [], events: [] }; loadedDate = date; }
-  if (demo) {
-    history = demoHistory(date);
-    const current = demoHistory(wibDate()).readings.at(-1) ?? null;
-    latest = { reading: current, online: false }; cached = false; loading = false; error = ''; render(); return;
-  }
   loading = true;
   if (!latest.reading && !history.readings.length) safeCacheRead();
   render();
@@ -133,28 +125,27 @@ async function load() {
 }
 
 function statusPill() {
-  const label = demo ? 'Mode demo' : cached ? 'Data tersimpan' : latest.online ? 'Perangkat online' : 'Perangkat offline';
-  return `<span class="pill ${demo ? 'demo' : latest.online && !cached ? 'online' : 'offline'}"><span class="status-dot"></span>${label}</span>`;
+  const label = cached ? 'Data tersimpan' : latest.online ? 'Perangkat online' : 'Perangkat offline';
+  return `<span class="pill ${latest.online && !cached ? 'online' : 'offline'}"><span class="status-dot"></span>${label}</span>`;
 }
 
 function heading(title: string) {
-  return `<div class="page-heading"><div><h1>${title}</h1></div><div class="heading-actions"><button class="button ${demo ? 'demo-active' : ''}" id="demo-toggle" aria-pressed="${demo}">${icon(demo ? 'close' : 'sun')}${demo ? 'Keluar demo' : 'Lihat demo'}</button><button class="button icon-button" id="refresh" aria-label="Perbarui data" ${loading ? 'disabled' : ''}>${icon('refresh', loading ? 'spin' : '')}</button></div></div>
-  ${demo ? '<div class="notice demo-notice">Data simulasi untuk pratinjau presentasi. Bukan pembacaan ESP32; tidak disimpan ke database.</div>' : ''}
+  return `<div class="page-heading"><div><h1>${title}</h1></div><div class="heading-actions"><button class="button icon-button" id="refresh" aria-label="Perbarui data" ${loading ? 'disabled' : ''}>${icon('refresh', loading ? 'spin' : '')}</button></div></div>
   ${error ? `<div class="notice error-notice" role="status">${error}</div>` : ''}`;
 }
 
 function overview() {
   const r = latest.reading;
-  const stale = !demo && (!latest.online || cached);
+  const stale = !latest.online || cached;
   const state = r ? soilState(r.soil_adc) : 'Menunggu data';
   return `${heading('Monitoring tanaman')}
     <section class="device-summary" aria-label="Status perangkat"><strong>${icon('leaf')} Smart Plant 01</strong>${statusPill()}<span>${longDate.format(Date.now())}</span></section>
-    <section class="section-heading"><div><h2>Data sensor</h2><p>${demo ? 'Pratinjau kondisi tanaman menggunakan data simulasi.' : r ? `Pembacaan terakhir ${fullTime.format(r.recorded_at)} WIB${stale ? ' · bukan data langsung' : ''}` : 'Menunggu kiriman pertama dari ESP32.'}</p></div><span class="small-label">${icon('refresh')} Setiap 10 detik</span></section>
+    <section class="section-heading"><div><h2>Data sensor</h2><p>${r ? `Pembacaan terakhir ${fullTime.format(r.recorded_at)} WIB${stale ? ' · bukan data langsung' : ''}` : 'Menunggu kiriman pertama dari ESP32.'}</p></div><span class="small-label">${icon('refresh')} Setiap 5 menit</span></section>
     <section class="metrics" aria-label="Pembacaan sensor terbaru">
       ${stat('drop', 'Kondisi tanah', r ? number.format(r.soil_adc) : '—', 'ADC', state, r ? 'Semakin rendah, semakin basah' : 'Sensor kelembapan tanah', 'soil')}
       ${stat('temp', 'Suhu udara', r?.temperature != null ? number.format(r.temperature) : '—', '°C', 'DHT22', r?.temperature == null ? 'Belum ada pembacaan valid' : 'Suhu lingkungan tanaman', 'temperature')}
       ${stat('air', 'Kelembapan udara', r?.humidity != null ? number.format(r.humidity) : '—', '%', 'DHT22', r?.humidity == null ? 'Belum ada pembacaan valid' : 'Kelembapan relatif udara', 'humidity')}
-      ${stat('pump', 'Pompa air', r ? r.pump_fault ? 'Terhenti' : r.pump_on ? 'Menyiram' : 'Istirahat' : '—', '', r?.pump_fault ? 'Pengaman aktif' : 'Otomatis', r?.pump_fault ? 'Periksa sistem, lalu reset ESP32' : r?.pump_on ? 'Menyala hingga ADC ≤ 2700' : 'Menyala saat ADC ≥ 3200', 'pump')}
+      ${stat('pump', 'Pompa air', r ? r.pump_fault ? 'Terhenti' : r.pump_on ? 'Menyiram' : 'Istirahat' : '—', '', r?.pump_fault ? 'Pengaman aktif' : 'Otomatis', r?.pump_fault ? 'Periksa sistem, lalu reset ESP32' : r?.pump_on ? 'Menyala hingga ADC ≤ 1100' : 'Menyala saat ADC ≥ 3200', 'pump')}
     </section>
     <div class="section-heading trend-heading"><div><h2>Grafik sensor</h2></div><button class="text-button" data-page="history">Riwayat lengkap ${icon('arrow')}</button></div>
     ${filters()}
@@ -162,7 +153,7 @@ function overview() {
 }
 
 function stat(symbol: string, title: string, value: string, unit: string, badge: string, note: string, type: string) {
-  const watering = type === 'pump' && value === 'Menyiram' && (demo || latest.online && !cached);
+  const watering = type === 'pump' && value === 'Menyiram' && latest.online && !cached;
   return `<article class="card stat-card ${type}${watering ? ' is-watering' : ''}"><div class="stat-top"><span class="icon-box">${icon(symbol)}</span><span class="stat-tag">${badge}</span></div><h3>${title}</h3><div class="stat-value ${type === 'pump' ? 'word-value' : ''}">${value}<span>${unit}</span></div>${badge === 'Pengaman aktif' ? `<p>${note}</p>` : ''}</article>`;
 }
 
@@ -182,10 +173,10 @@ function chart() {
   const valid = data.filter(r => r[metric] !== null);
   const choices = `<div class="chart-tabs" role="group" aria-label="Sensor yang ditampilkan">${(['soil_adc', 'temperature', 'humidity'] as Metric[]).map(key => `<button data-metric="${key}" class="${metric === key ? 'active' : ''}" aria-pressed="${metric === key}">${key === 'soil_adc' ? 'Tanah' : key === 'temperature' ? 'Suhu' : 'Udara'}</button>`).join('')}</div>`;
   let graph: string;
-  if (!valid.length) graph = `<div class="empty-chart">${icon('leaf')}<strong>Belum ada jejak pertumbuhan</strong><p>${demo ? 'Tidak ada data simulasi untuk tanggal ini.' : 'Data akan muncul setelah ESP32 mengirim pembacaan.'}</p></div>`;
+  if (!valid.length) graph = `<div class="empty-chart">${icon('leaf')}<strong>Belum ada jejak pertumbuhan</strong><p>Data akan muncul setelah ESP32 mengirim pembacaan.</p></div>`;
   else {
     const values = valid.map(r => r[metric]!);
-    const low = metric === 'soil_adc' ? 2200 : metric === 'humidity' ? 40 : 20;
+    const low = metric === 'soil_adc' ? 0 : metric === 'humidity' ? 40 : 20;
     const high = metric === 'soil_adc' ? 3600 : metric === 'humidity' ? 100 : 36;
     const min = Math.max(info.min, Math.min(low, Math.floor(Math.min(...values) / 5) * 5));
     const max = Math.min(info.max, Math.max(high, Math.ceil(Math.max(...values) / 5) * 5));
@@ -203,7 +194,7 @@ function chart() {
     const line = segments.map(points => `M${points.join(' L')}`).join(' ');
     const area = segments.map(points => `M${points.join(' L')} L${points.at(-1)!.split(',')[0]},204 L${points[0].split(',')[0]},204 Z`).join(' ');
     const ticks = Array.from({ length: 5 }, (_, i) => min + (max - min) * i / 4);
-    const thresholds = metric === 'soil_adc' ? [2700, 3200].map(value => `<line class="threshold" x1="52" x2="720" y1="${y(value)}" y2="${y(value)}"/><text class="threshold-label" x="716" y="${y(value) - 5}" text-anchor="end">${value === 2700 ? 'Batas basah' : 'Batas kering'} ${value}</text>`).join('') : '';
+    const thresholds = metric === 'soil_adc' ? [1100, 3200].map(value => `<line class="threshold" x1="52" x2="720" y1="${y(value)}" y2="${y(value)}"/><text class="threshold-label" x="716" y="${y(value) - 5}" text-anchor="end">${value === 1100 ? 'Batas basah' : 'Batas kering'} ${value}</text>`).join('') : '';
     graph = `<div class="plot-wrap"><svg id="chart" viewBox="0 0 752 246" role="img" aria-label="Grafik ${info.label} dalam ${info.unit}, tanggal ${date}. Data lengkap tersedia dalam tabel.">
       <defs><linearGradient id="chart-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--chart)" stop-opacity=".22"/><stop offset="1" stop-color="var(--chart)" stop-opacity=".015"/></linearGradient></defs>
       ${ticks.map(value => `<line class="gridline" x1="52" x2="720" y1="${y(value)}" y2="${y(value)}"/><text class="axis-label" x="41" y="${y(value) + 4}" text-anchor="end">${number.format(value)}</text>`).join('')}
@@ -213,7 +204,7 @@ function chart() {
       <rect id="chart-target" x="52" y="24" width="668" height="184" fill="transparent" tabindex="0" role="slider" aria-label="Jelajahi pembacaan grafik dengan tombol panah" aria-valuemin="0" aria-valuemax="${data.length - 1}" aria-valuenow="0"/>
       </svg><div id="chart-tooltip" class="chart-tooltip" hidden></div></div>`;
   }
-  return `<div class="card-heading"><div><h3>${info.label}</h3><p>${info.unit}${metric === 'soil_adc' ? ' · nilai lebih rendah = tanah lebih basah' : ' · waktu dalam WIB'}</p></div>${choices}</div>${graph}<div class="chart-bottom"><span><i class="line-key"></i> ${info.label}${demo ? ' · simulasi' : ''}</span><button class="text-button" id="table-toggle" aria-expanded="${tableOpen}">${tableOpen ? 'Sembunyikan tabel' : 'Lihat tabel data'} ${icon('chevron')}</button></div>${tableOpen ? dataTable() : ''}`;
+  return `<div class="card-heading"><div><h3>${info.label}</h3><p>${info.unit}${metric === 'soil_adc' ? ' · nilai lebih rendah = tanah lebih basah' : ' · waktu dalam WIB'}</p></div>${choices}</div>${graph}<div class="chart-bottom"><span><i class="line-key"></i> ${info.label}</span><button class="text-button" id="table-toggle" aria-expanded="${tableOpen}">${tableOpen ? 'Sembunyikan tabel' : 'Lihat tabel data'} ${icon('chevron')}</button></div>${tableOpen ? dataTable() : ''}`;
 }
 
 function eventsList(limit = 100) {
@@ -227,7 +218,7 @@ function historyPage() {
   return `${heading('Riwayat data')}
     ${filters()}<div class="history-summary"><span>${icon('history')} <strong>${history.readings.length.toLocaleString('id-ID')}</strong> pembacaan tersimpan</span><span>${icon('drop')} <strong>${onCount}</strong> penyiraman dimulai</span><button class="button compact" id="export" ${!history.readings.length ? 'disabled' : ''}>${icon('down')} Unduh CSV</button></div>
     <section class="card chart-card">${chart()}</section>
-    ${!tableOpen ? `<section class="card history-table"><div class="card-heading"><div><h3>Catatan sensor</h3><p>Tanggal dd/mm/yy · waktu Indonesia Barat</p></div><span class="stat-tag">${demo ? 'Data simulasi' : 'Data ESP32'}</span></div>${dataTable()}</section>` : ''}
+    ${!tableOpen ? `<section class="card history-table"><div class="card-heading"><div><h3>Catatan sensor</h3><p>Tanggal dd/mm/yy · waktu Indonesia Barat</p></div><span class="stat-tag">Data ESP32</span></div>${dataTable()}</section>` : ''}
     <section class="card history-events"><div class="card-heading"><div><h3>Jurnal penyiraman</h3><p>Perubahan status pompa yang tercatat pada tanggal terpilih.</p></div>${icon('drop')}</div>${eventsList()}</section>`;
 }
 
@@ -235,15 +226,15 @@ function dataTable() {
   const total = Math.max(1, Math.ceil(history.readings.length / 15));
   tablePage = Math.min(tablePage, total - 1);
   const rows = history.readings.slice().reverse().slice(tablePage * 15, (tablePage + 1) * 15);
-  return `<div class="table-scroll"><table><caption class="sr-only">Riwayat sensor ${date} dalam WIB${demo ? ', data simulasi' : ''}</caption><thead><tr><th scope="col">Waktu (WIB)</th><th scope="col">Tanah (ADC)</th><th scope="col">Suhu (°C)</th><th scope="col">Udara (%)</th><th scope="col">Kondisi</th><th scope="col">Pompa</th></tr></thead><tbody>${rows.length ? rows.map(r => `<tr><td>${fullTime.format(r.recorded_at)}</td><td>${number.format(r.soil_adc)}</td><td>${r.temperature === null ? '—' : number.format(r.temperature)}</td><td>${r.humidity === null ? '—' : number.format(r.humidity)}</td><td>${soilState(r.soil_adc)}</td><td><span class="table-status ${r.pump_on ? 'on' : ''}">${r.pump_fault ? 'Pengaman aktif' : r.pump_on ? 'ON' : 'OFF'}</span></td></tr>`).join('') : '<tr><td colspan="6" class="empty-cell">Belum ada pembacaan pada tanggal ini.</td></tr>'}</tbody></table></div><div class="pagination"><span>Halaman ${tablePage + 1} dari ${total}</span><div><button class="button compact" id="previous" ${tablePage === 0 ? 'disabled' : ''}>Sebelumnya</button><button class="button compact" id="next" ${tablePage >= total - 1 ? 'disabled' : ''}>Berikutnya</button></div></div>`;
+  return `<div class="table-scroll"><table><caption class="sr-only">Riwayat sensor ${date} dalam WIB</caption><thead><tr><th scope="col">Waktu (WIB)</th><th scope="col">Tanah (ADC)</th><th scope="col">Suhu (°C)</th><th scope="col">Udara (%)</th><th scope="col">Kondisi</th><th scope="col">Pompa</th></tr></thead><tbody>${rows.length ? rows.map(r => `<tr><td>${fullTime.format(r.recorded_at)}</td><td>${number.format(r.soil_adc)}</td><td>${r.temperature === null ? '—' : number.format(r.temperature)}</td><td>${r.humidity === null ? '—' : number.format(r.humidity)}</td><td>${soilState(r.soil_adc)}</td><td><span class="table-status ${r.pump_on ? 'on' : ''}">${r.pump_fault ? 'Pengaman aktif' : r.pump_on ? 'ON' : 'OFF'}</span></td></tr>`).join('') : '<tr><td colspan="6" class="empty-cell">Belum ada pembacaan pada tanggal ini.</td></tr>'}</tbody></table></div><div class="pagination"><span>Halaman ${tablePage + 1} dari ${total}</span><div><button class="button compact" id="previous" ${tablePage === 0 ? 'disabled' : ''}>Sebelumnya</button><button class="button compact" id="next" ${tablePage >= total - 1 ? 'disabled' : ''}>Berikutnya</button></div></div>`;
 }
 
 function aboutPage() {
   return `${heading('Tentang proyek')}
   <section class="card about-intro"><div><h2>Smart Plant ESP32</h2><p>Smart Plant membaca kondisi tanah, suhu, dan kelembapan udara. ESP32 mengambil keputusan penyiraman secara lokal, sementara website ini menjadi jendela untuk melihat kondisi serta riwayatnya.</p><div class="tech-tags"><span>ESP32</span><span>Vite + TypeScript</span><span>Cloudflare Workers</span><span>D1</span><span>PWA</span></div></div>${plant}</section>
-  <div class="about-grid"><section class="card about-card"><span class="icon-box">${icon('drop')}</span><h3>Penyiraman dengan hysteresis</h3><ol class="logic-list"><li><strong>ADC ≥ 3200</strong><span>Tanah kering. Pompa mulai menyiram.</span></li><li><strong>ADC 2700–3200</strong><span>Status pompa dipertahankan, tidak berulang ON/OFF.</span></li><li><strong>ADC ≤ 2700</strong><span>Tanah basah. Pompa berhenti.</span></li></ol><p class="fine-print">Pengaman firmware mematikan pompa setelah maksimal 60 detik. Periksa kondisi perangkat sebelum melakukan reset.</p></section>
-  <section class="card about-card"><span class="icon-box">${icon('history')}</span><h3>Pencatatan data</h3><ul class="feature-list"><li>${icon('check')} Data terbaru dikirim setiap 10 detik.</li><li>${icon('check')} Satu pembacaan riwayat disimpan per menit.</li><li>${icon('check')} Perubahan pompa tercatat saat diterima server.</li><li>${icon('check')} Semua tanggal dan waktu menggunakan WIB.</li><li>${icon('check')} Website hanya monitoring, tanpa kontrol pompa.</li></ul><p class="fine-print">Saat internet terputus, otomatisasi tetap berjalan. Data selama putus koneksi tidak diunggah ulang oleh firmware versi awal.</p></section></div>
-  <section class="care-strip">${icon('info')}<div><h3>Keterangan sensor</h3><p>Sensor tanah ditampilkan sebagai ADC, bukan persentase tanpa kalibrasi. Mode demo selalu ditandai dan tidak mengubah database.</p></div></section>`;
+  <div class="about-grid"><section class="card about-card"><span class="icon-box">${icon('drop')}</span><h3>Penyiraman dengan hysteresis</h3><ol class="logic-list"><li><strong>ADC ≥ 3200</strong><span>Tanah kering. Pompa mulai menyiram.</span></li><li><strong>ADC 1101–3199</strong><span>Status pompa dipertahankan, tidak berulang ON/OFF.</span></li><li><strong>ADC ≤ 1100</strong><span>Tanah basah. Pompa berhenti.</span></li></ol><p class="fine-print">Saat pompa menyala, ESP32 memeriksa tanah setiap 2 detik. Status di website mengikuti kiriman terakhir, bukan kondisi langsung.</p></section>
+  <section class="card about-card"><span class="icon-box">${icon('history')}</span><h3>Pencatatan data</h3><ul class="feature-list"><li>${icon('check')} Data terbaru dikirim setiap 5 menit.</li><li>${icon('check')} Riwayat disimpan saat data diterima, maksimal satu pembacaan per menit.</li><li>${icon('check')} Perubahan pompa tercatat jika teramati pada kiriman data.</li><li>${icon('check')} Semua tanggal dan waktu menggunakan WIB.</li><li>${icon('check')} Website hanya monitoring, tanpa kontrol pompa.</li></ul><p class="fine-print">Saat internet terputus, otomatisasi tetap berjalan. Data selama putus koneksi tidak diunggah ulang oleh firmware versi awal.</p></section></div>
+  <section class="care-strip">${icon('info')}<div><h3>Keterangan sensor</h3><p>Kalibrasi sensor tanah: basah 0–1100, lembap 1101–3199, dan kering 3200–4095 ADC. Perangkat dianggap offline setelah 12 menit tanpa kiriman. Website diperbarui otomatis setiap 1 menit.</p></div></section>`;
 }
 
 function render() {
@@ -309,10 +300,10 @@ function attachChart() {
 
 function exportCsv() {
   const header = 'tanggal_waktu_WIB,tanah_ADC,suhu_C,kelembapan_udara_persen,pompa,pengaman,sumber';
-  const rows = history.readings.map(r => [fullTime.format(r.recorded_at).replaceAll(',', ''), r.soil_adc, r.temperature ?? '', r.humidity ?? '', r.pump_on ? 'ON' : 'OFF', r.pump_fault ? 'AKTIF' : 'NORMAL', demo ? 'SIMULASI' : 'ESP32'].join(','));
+  const rows = history.readings.map(r => [fullTime.format(r.recorded_at).replaceAll(',', ''), r.soil_adc, r.temperature ?? '', r.humidity ?? '', r.pump_on ? 'ON' : 'OFF', r.pump_fault ? 'AKTIF' : 'NORMAL', 'ESP32'].join(','));
   const url = URL.createObjectURL(new Blob(['﻿', header, '\r\n', rows.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   const a = document.createElement('a');
-  a.href = url; a.download = `smartplant-${date.slice(8)}${date.slice(5, 7)}${date.slice(2, 4)}${demo ? '-demo' : ''}.csv`; a.click();
+  a.href = url; a.download = `smartplant-${date.slice(8)}${date.slice(5, 7)}${date.slice(2, 4)}.csv`; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
@@ -327,7 +318,7 @@ shell();
 void load();
 setInterval(() => {
   if (!document.hidden && !document.activeElement?.matches('input, [role="slider"]')) void load();
-}, 10_000);
+}, 60_000);
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js').catch(() => { /* Monitoring tetap berfungsi jika pemasangan PWA gagal. */ }); });
 }

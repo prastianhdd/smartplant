@@ -28,7 +28,11 @@ export interface LatestResponse { reading: Reading | null; online: boolean }
 export interface HistoryResponse { readings: Reading[]; events: PumpEvent[] }
 
 export function soilState(adc: number): 'Kering' | 'Lembap' | 'Basah' {
-  return adc >= 3200 ? 'Kering' : adc <= 2700 ? 'Basah' : 'Lembap';
+  return adc >= 3200 ? 'Kering' : adc <= 1100 ? 'Basah' : 'Lembap';
+}
+
+export function deviceOnline(recordedAt: number | undefined, now = Date.now()): boolean {
+  return recordedAt !== undefined && now - recordedAt >= 0 && now - recordedAt < 12 * 60_000;
 }
 
 export function wibDate(timestamp = Date.now()): string {

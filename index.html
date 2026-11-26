@@ -58,7 +58,7 @@
             "operatingSystem": "Web",
             "inLanguage": "id",
             "description": "Website monitoring kondisi tanah, suhu, kelembapan udara, serta status dan riwayat penyiraman otomatis ESP32.",
-            "featureList": ["Monitoring sensor tanaman", "Grafik dan riwayat data dalam WIB", "Ekspor CSV", "Mode demo", "Dukungan PWA"]
+            "featureList": ["Monitoring sensor tanaman", "Grafik dan riwayat data dalam WIB", "Ekspor CSV", "Dukungan PWA"]
           }
         ]
       }
@@ -74,10 +74,10 @@
           <li>Pembacaan sensor terbaru dan status pompa air.</li>
           <li>Grafik, tabel riwayat berdasarkan tanggal, dan unduhan CSV untuk laporan.</li>
           <li>Waktu dalam WIB, tampilan responsif, dan dukungan PWA.</li>
-          <li>Mode demo dengan data simulasi yang terpisah dari data perangkat.</li>
+          <li>Data perangkat dikirim setiap 5 menit, dengan batas offline 12 menit.</li>
         </ul>
         <p>ESP32 mengendalikan penyiraman secara mandiri. Website hanya digunakan untuk monitoring, bukan mengendalikan pompa.</p>
-        <noscript><p>Aktifkan JavaScript untuk membuka dashboard, melihat pembacaan sensor, dan mencoba mode demo.</p></noscript>
+        <noscript><p>Aktifkan JavaScript untuk membuka dashboard, melihat pembacaan sensor, dan melihat riwayat data.</p></noscript>
       </main>
     </div>
     <script type="module" src="/src/main.ts"></script>

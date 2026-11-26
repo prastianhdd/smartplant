@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { dayBounds, validTelemetry } from '../shared/types';
+import { dayBounds, deviceOnline, validTelemetry } from '../shared/types';
 import type { Reading } from '../shared/types';
 
 type Row = Omit<Reading, 'pump_on' | 'pump_fault'> & { pump_on: number; pump_fault: number };
@@ -45,7 +45,7 @@ export default {
     try {
       if (url.pathname === '/api/latest' && request.method === 'GET') {
         const row = await env.DB.prepare('SELECT * FROM latest WHERE id = 1').first<Row>();
-        return json({ reading: row ? reading(row) : null, online: !!row && Date.now() - row.recorded_at < 45_000 });
+        return json({ reading: row ? reading(row) : null, online: deviceOnline(row?.recorded_at) });
       }
       if (url.pathname === '/api/history' && request.method === 'GET') {
         const bounds = dayBounds(url.searchParams.get('date') ?? '');

@@ -56,9 +56,7 @@ main{max-width:1500px;margin:auto;padding:31px 34px 26px;outline:none}
 .button .icon{width:15px;height:15px}
 .button.compact{padding:8px 11px;min-height:32px;font-size:11px}
 .button.icon-button{padding:9px;min-width:39px}
-.button.demo-active{border-color:#c5dcb8;background:#f1f7eb;color:var(--forest)}
 .notice{font-size:12px;line-height:1.8;border:1px solid;padding:12px 16px;border-radius:10px;margin:0 0 18px;position:relative}
-.demo-notice{background:#fff5e5;border-color:#eedfc4;color:#79511d}
 .error-notice{background:#fff3eb;border-color:#eddbcc;color:#824d29}
 .device-summary{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:17px 20px;margin-bottom:24px;background:linear-gradient(110deg,#eef5e8,#f1f6ed);border:1px solid #dee8d7;border-radius:12px}
 .device-summary strong{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650}
@@ -67,7 +65,6 @@ main{max-width:1500px;margin:auto;padding:31px 34px 26px;outline:none}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;background:#f5faef;border:1px solid #d3e3c9;border-radius:20px;font-size:10px;font-weight:550;white-space:nowrap;color:#386632}
 .status-dot{width:6px;height:6px;border-radius:100%;background:currentColor}
 .pill.offline{color:#586555;background:#f5f6f0;border-color:#dce2d5}
-.pill.demo{color:#865a20;background:#fff5e5;border-color:#f0dfc4}
 .section-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
 .section-heading h2{font-size:18px;font-weight:650;letter-spacing:-.6px}
 .section-heading p{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.7}

@@ -19,7 +19,6 @@ Website digunakan untuk melihat kondisi terbaru dan riwayat pengamatan. Penyiram
 - Riwayat data dan aktivitas penyiraman berdasarkan tanggal.
 - Grafik, tabel, serta unduhan CSV untuk laporan dan presentasi.
 - Tampilan responsif untuk komputer dan ponsel, dapat dipasang sebagai PWA.
-- Mode demo untuk mencoba tampilan tanpa perangkat; data simulasi selalu ditandai dan tidak disimpan ke database.
 - Seluruh waktu ditampilkan dalam WIB.
 
 ## Perangkat dan teknologi
@@ -49,7 +48,7 @@ Nilai **1100 termasuk basah**, sedangkan **3200 termasuk kering**, sehingga tida
 3. Pompa berhenti saat tanah mencapai kondisi basah, yaitu ADC **≤1100**.
 4. Jika pompa sejak awal mati dan tanah masih lembap, pompa tetap mati.
 
-Pengaman mematikan pompa setelah terdeteksi menyala selama 60 detik dan menguncinya sampai ESP32 direset. Periksa air, sensor, dan pompa sebelum melakukan reset. Proses koneksi internet dapat menunda pemeriksaan pengaman; batas tersebut bukan jaminan waktu fisik presisi.
+Saat pompa menyala, tanah diperiksa setiap 2 detik sampai mencapai kondisi basah. Firmware saat ini tidak memiliki batas durasi pompa; pastikan air tersedia dan awasi perangkat saat pengujian. Proses koneksi internet dapat menunda pembacaan sensor.
 
 ## Menggunakan perangkat
 
@@ -68,7 +67,7 @@ Firmware utama berada di [`firmware/smartplant/smartplant.ino`](firmware/smartpl
 | LED kering | GPIO32 |
 | OLED SDA / SCL | GPIO21 / GPIO22 |
 
-Data terbaru dikirim setiap 10 detik. Website menyimpan satu pembacaan per menit serta perubahan status pompa yang diterima server. Data selama koneksi terputus tidak dikirim ulang.
+Data pertama dikirim saat Wi-Fi tersambung, lalu setiap 5 menit. Website diperbarui otomatis setiap 1 menit dan menganggap perangkat offline setelah 12 menit tanpa kiriman. Riwayat disimpan saat data diterima, maksimal satu pembacaan per menit. Status pompa mengikuti kiriman terakhir; penyiraman yang selesai di antara dua kiriman dapat tidak tercatat. Data selama koneksi terputus tidak dikirim ulang.
 
 Referensi versi Blynk tersedia terpisah di [`firmware/smartplant_wifi_blynk/`](firmware/smartplant_wifi_blynk/).
 
@@ -83,7 +82,7 @@ npm run db:local
 npm run dev
 ```
 
-Buka alamat yang ditampilkan terminal, biasanya `http://127.0.0.1:5173`. Gunakan **Lihat demo** untuk mencoba grafik, riwayat, dan ekspor CSV tanpa ESP32.
+Buka alamat yang ditampilkan terminal, biasanya `http://127.0.0.1:5173`. Dashboard menampilkan data ESP32; tanpa kiriman perangkat, tampilan menunjukkan keadaan kosong.
 
 Pengujian dan build:
 
@@ -97,5 +96,5 @@ Untuk menerima data perangkat secara lokal, isi `DEVICE_TOKEN` melalui `.dev.var
 ## Catatan proyek
 
 - Gunakan catu daya yang sesuai untuk relay dan pompa. Jangan menghubungkan pompa langsung ke GPIO ESP32.
-- Firmware demo belum memverifikasi identitas server HTTPS. Jangan gunakan pengaturan ini sebagai acuan keamanan untuk sistem produksi.
+- Firmware saat ini belum memverifikasi identitas server HTTPS. Jangan gunakan pengaturan ini sebagai acuan keamanan untuk sistem produksi.
 - Sebelum mengunggah ke GitHub, ganti token dan kata sandi dengan placeholder, termasuk pada referensi Blynk dan file lama. Cabut atau rotasi kredensial yang pernah terunggah.
